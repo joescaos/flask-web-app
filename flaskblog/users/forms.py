@@ -1,9 +1,10 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField
+from wtforms import StringField, PasswordField, SubmitField, BooleanField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
 from flaskblog.models import User
 from flask_login import current_user
+
 class RegistrationForm(FlaskForm):
     username = StringField('Nombre de usuario', 
                             validators=[DataRequired(), Length(min=2, max=20)])
@@ -55,7 +56,18 @@ class UpdateAccountForm(FlaskForm):
             if email:
                 raise ValidationError('Dirección de email ya existe')
 
-class PostForm(FlaskForm):
-    title = StringField('Titulo', validators=[DataRequired()])
-    content = TextAreaField('Contenido', validators=[DataRequired()])
-    submit = SubmitField('Publicar')
+class RequestResetForm(FlaskForm):
+    email = StringField('Email',
+                            validators=[DataRequired(), Email()])
+    submit = SubmitField('Solicitar cambio de Contraseña')
+
+    def validate_email(self, email):
+        email = User.query.filter_by(email=email.data).first()
+        if email is None:
+            raise ValidationError('Cuenta no existe')
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('Contraseña', validators=[DataRequired()])
+    confirm_password = PasswordField('Verificar contraseña', 
+                            validators=[DataRequired(), EqualTo('password')])
+    submit = SubmitField('Cambiar Contraseña')
